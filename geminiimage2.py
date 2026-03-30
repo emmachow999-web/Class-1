@@ -26,7 +26,7 @@ for path in images:
  
 response = client.models.generate_content(
     model="gemini-2.0-flash",
-    contents=["make up a creative and fantastical story that links these pictures together"]
+    contents=["make up a fictional story about these two images that links them together"]
 )
  
 print(response.text)
