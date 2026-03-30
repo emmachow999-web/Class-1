@@ -10,11 +10,12 @@ client = genai.Client(api_key=api_key)
 
 images = []
 while True:
-    path = input("image or URL (press enter to stop): ")
+    path = input("at least two images or URLs (press enter to stop): ")
     if not path:
         break
     images.append(path)
  
+content = ["make up a fictional story about these two images that links them together"]
 
 for path in images:
     if path.startswith("http"):
@@ -22,11 +23,11 @@ for path in images:
     else:
         with open(path, "rb") as f:
             data = f.read()
-    contents.append(types.Part.from_bytes(data=data, mime_type="image/jpeg"))
+    content.append(types.Part.from_bytes(data=data, mime_type="image/jpeg"))
  
 response = client.models.generate_content(
-    model="gemini-2.0-flash",
-    contents=["make up a fictional story about these two images that links them together"]
+    model="gemini-3-flash-preview",
+    contents=content
 )
- 
+
 print(response.text)
