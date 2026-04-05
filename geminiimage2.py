@@ -15,7 +15,7 @@ while True:
         break
     images.append(path)
  
-content = ["make up a fictional story about these two images that links them together"]
+prompt = ["make up a fictional story about these two images that links them together"]
 
 for path in images:
     if path.startswith("http"):
@@ -23,11 +23,11 @@ for path in images:
     else:
         with open(path, "rb") as f:
             data = f.read()
-    content.append(types.Part.from_bytes(data=data, mime_type="image/jpeg"))
+    prompt.append(types.Part.from_bytes(data=data, mime_type="image/jpeg"))
  
 response = client.models.generate_content(
     model="gemini-3-flash-preview",
-    contents=content
+    contents=prompt
 )
 
 print(response.text)
