@@ -1,70 +1,57 @@
-import os
-import re
-from google import genai
-from google.genai import types
+import json, os
 from dotenv import load_dotenv
+from google import genai
+load_dotenv()
 
-# dotenv -f /path/to/.env run python3 app.py
-load_dotenv() # load from .env by default in the current directory
-    
-import json
-from flask import Flask, request
+from flask import Flask, render_template, request
 
-MODEL = "gemini-2.5-flash-lite" 
-
-client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+from lib.image_ai import image_summary, make_story
 
 app = Flask(__name__)
 
 
-@app.route('/add_post', methods=['POST'])
-def add_post():
-    try:
-        data = json.loads(request.data)
-        num1 = data['num1']
-        num2 = data['num2']
-        return json.dumps({'sum': int(num1)+int(num2)}), 200
-    except Exception as e:
-        return json.dumps({'error': str(e)}), 500
+# GET / - Home Page
+# Renders the front-end interface for the application
+# Input: None
+# Output: HTML page (index.html)
+@app.route('/')
+def index():
+    return render_template("index.html")
 
-def data_url_to_google_types():
-    _, media_type, encode_base, content = re.split("data:[;]", data_url)
-    return types.Part.from_bytes(
-        mime_type = media_type,
-        data = content,
-    )
+# POST /summary_image - Generate Image Summary
+# Analyzes an image and generates a text summary of its content
+# Input: JSON object with format {"url": "image_url_string"}
+# Example Input: {"url": "https://example.com/image.jpg"}
+# Output: JSON object with format {"description": "<image_description>"}
+# Example Output: {"description": "A sunset over a calm ocean with golden clouds reflecting on the water"}
+@app.route('/summary_image', methods=['POST'])
+def summary_image():
+    print("Process Image Summary")
+    
+    images= json.loads(request.data)
 
-def make_story(image_url_with_desc):
-    try:
-        contents = [
-            """
-            make a story for the images inputted, 100 words or less
-            """,
-        ]
+    client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+    value = json.dumps(image_summary(client, images["url"]))
+    print(value)
+    return value
 
-        for img_with_desc in image_url_obj:
-            contents.append(data_url_to_google_types(img_with_desc["data_url"]))
-            contents.append(f"The {i}-th image's description: {img_with_desc['description']}")
-
-        response = client.models.generate_content(
-            model = MODEL,
-            contents = contents,
-        )
-        return {
-            "summary": response.text
-        }
-    except Exception as e:
-        return {
-            "error": f"Exception occured: {e}"
-        }
-
+# POST /generate_story - Generate Story from Images
+# Creates a cohesive story based on a sequence of images and their descriptions
+# Input: JSON array of objects with format [{"data_url": "base64_image_data", "description": "image_description"}, ...]
+# Example Input: [{"data_url": "data:image/jpeg;base64,/9j/4AAQSkZJRg...", "description": "A girl walks into the forest"}, {"data_url": "data:image/jpeg;base64,/9j/4AAQSkZJRg...", "description": "She discovers a magical cabin"}]
+# Output: JSON object with format {"story": "<generated_story>"}
+# Example Output: {"story": "Once upon a time, a curious girl decided to explore the mysterious forest. As she walked deeper into the woods, the sunlight filtered through the tall trees. Suddenly, she came upon a charming cabin hidden among the trees..."}
 @app.route('/generate_story', methods=['POST'])
 def generate_story():
-    image_url_obj = json.loads(request.data)
-    print(image_url_obj)
-    value = json.dumps(make_story(image_url_obj))
+    print("Generate Story")
+    client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+    
+    image_url_with_desc_list = json.loads(request.data)
+    value = json.dumps(make_story(client, image_url_with_desc_list))
     print(value)
-    return value, 200
+    return value
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
