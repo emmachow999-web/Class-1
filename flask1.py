@@ -55,7 +55,7 @@ def make_story(image_url_with_desc):
             """,
             data_url_to_google_types(image_url_obj["data_url"])
         ]
-        response - client.models.generate_content(
+        response = client.models.generate_content(
             model = MODEL,
             contents = contents,
         )

@@ -1,7 +1,5 @@
 var CLICK_COUNT = 0
 
-var CLICK_COUNT = 0
-
 document.getElementById('clickButton').addEventListener(
     'click',
     function() {
